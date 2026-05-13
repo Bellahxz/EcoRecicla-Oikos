@@ -1,0 +1,14 @@
+:root {
+  --green-primary: #3E6763;
+  --purple-primary: #A789EC;
+  --white-soft: #F0F0F0;
+
+  --green-light: #6FA8A2;
+
+  --text-dark: #000000;
+
+  --shadow-soft:
+    0 10px 30px rgba(0,0,0,0.12);
+  --radius: 24px;
+
+}
