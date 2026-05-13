@@ -11,9 +11,13 @@ html {
 }
 
 body {
-
   font-family: "Poppins", sans-serif;
-  background: #ffffff;
+  background: #e8e8e8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 40px;
+  min-height: 100vh;
+  padding: 20px 0;
   overflow-x: hidden;
-
 }

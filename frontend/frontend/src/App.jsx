@@ -1,7 +1,7 @@
-import HomeSection from "./sections/homeSection/HomeSection";
+import AppRoutes from "./routes/AppRoutes";
 
 function App() {
-  return <HomeSection />;
+  return <AppRoutes />;
 }
 
 export default App;

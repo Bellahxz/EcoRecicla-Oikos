@@ -1,9 +1,11 @@
-import HomeSection from "../sections/HomeSection/HomeSection";
+import HomeSection from "../sections/homeSection/HomeSection";
+import EcopanelSection from "../sections/ecopanelSection/EcopanelSection";
 
 function HomePage() {
   return (
     <>
       <HomeSection />
+      <EcopanelSection />
     </>
   );
 }

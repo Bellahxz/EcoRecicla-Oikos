@@ -1,65 +1,24 @@
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-html {
-  scroll-behavior: smooth;
-}
-
-body {
-
-  font-family: "Poppins", sans-serif;
-
-  background: #e8e8e8;
-
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  min-height: 100vh;
-
-}
-
 .home-section {
-
   width: 207vh;
   min-height: 97vh;
-
   padding: 30px 60px;
-
   display: flex;
   flex-direction: column;
-
-  background:
-    linear-gradient(
-      135deg,
-      #72B7AE,
-      #3E6763
-    );
-
+  background: linear-gradient(135deg, #72B7AE,#3E6763);
   border-radius: 32px;
-
 }
 
 .home-navbar {
-
   width: 100%;
-
   display: flex;
   justify-content: space-between;
   align-items: center;
-
 }
 
 .logo {
-
   font-size: 28px;
   font-weight: 700;
-
   color: white;
-
 }
 
 .nav-links {
@@ -113,11 +72,11 @@ body {
 }
 
 .highlight-text {
-  background:linear-gradient(135deg,#A789EC,#7B4FBF);
+  margin-top: 10px;
+  background: linear-gradient(135deg, #A789EC, #7B4FBF);
   padding: 2px 12px;
   color: white;
   display: inline-block;
-  border-radius: 12px;
 }
 
 .home-text p {
@@ -134,15 +93,11 @@ body {
   gap: 20px;
 }
 
-button {
+.primary-btn,
+.secondary-btn {
   font-family: "Poppins", sans-serif;
   width: 300px;
   font-size: 20px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-}
-
-.primary-btn,
-.secondary-btn {
   border: none;
   outline: none;
   padding: 18px 30px;
@@ -150,6 +105,7 @@ button {
   font-weight: 600;
   cursor: pointer;
   transition: transform 0.3s, box-shadow 0.3s;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
 
 .primary-btn {
@@ -165,7 +121,7 @@ button {
 .primary-btn:hover,
 .secondary-btn:hover {
   transform: translateY(-4px);
-  box-shadow:0 12px 30px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
 }
 
 .planet-container {
@@ -178,5 +134,5 @@ button {
 
 .planet-image {
   width: 850px;
-  filter:drop-shadow(0 0 40px rgba(0, 0, 0, 0.25));
+  filter: drop-shadow(0 0 40px rgba(0, 0, 0, 0.25));
 }
