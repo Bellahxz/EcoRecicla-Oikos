@@ -21,19 +21,19 @@ const dadosMeta = [
 ];
 
 const dadosPorAno = {
-  2024: [
+  2020: [
     { municipio: "Metrópole", valor: 1300 },
     { municipio: "Alpha", valor: 950 },
     { municipio: "Cidade Bela", valor: 870 },
     { municipio: "Paulínea", valor: 620 },
   ],
-  2025: [
+  2021: [
     { municipio: "Metrópole", valor: 1450 },
     { municipio: "Alpha", valor: 1100 },
     { municipio: "Cidade Bela", valor: 980 },
     { municipio: "Paulínea", valor: 750 },
   ],
-  2026: [
+  2022: [
     { municipio: "Metrópole", valor: 1500 },
     { municipio: "Alpha", valor: 1200 },
     { municipio: "Cidade Bela", valor: 1100 },
@@ -44,20 +44,20 @@ const dadosPorAno = {
 const META_RECICLAGEM = 85;
 
 const dadosReciclagemPorAno = {
-  2024: 58,
-  2025: 65,
-  2026: 72,
+  2020: 58,
+  2021: 65,
+  2022: 72,
 };
 
 function GaugeCircle({ value, meta }) {
-  const r = 52;
+  const r = 70;
   const circ = 2 * Math.PI * r;
   const progressDash = (value / 100) * circ;
   const metaDash = (meta / 100) * circ;
 
   return (
     <div className="gauge-wrapper">
-      <svg viewBox="0 0 140 140" className="gauge-svg">
+      <svg viewBox="0 0 180 180" className="gauge-svg">
         <defs>
           <linearGradient id="circGrad" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#7BCDC5" />
@@ -65,32 +65,36 @@ function GaugeCircle({ value, meta }) {
           </linearGradient>
         </defs>
         {/* trilha */}
-        <circle cx="70" cy="70" r={r} fill="none" stroke="#e0e0e0" strokeWidth="11" />
+        <circle cx="90" cy="90" r={r} fill="none" stroke="#e8f5f3" strokeWidth="13" />
         {/* arco meta */}
         <circle
-          cx="70" cy="70" r={r}
+          cx="90" cy="90" r={r}
           fill="none"
           stroke="#b2dfdb"
-          strokeWidth="11"
+          strokeWidth="13"
           strokeDasharray={`${metaDash} ${circ - metaDash}`}
           strokeLinecap="round"
-          style={{ transform: "rotate(-90deg)", transformOrigin: "70px 70px" }}
+          style={{ transform: "rotate(-90deg)", transformOrigin: "90px 90px" }}
         />
         {/* arco progresso */}
         <circle
-          cx="70" cy="70" r={r}
+          cx="90" cy="90" r={r}
           fill="none"
           stroke="url(#circGrad)"
-          strokeWidth="11"
+          strokeWidth="13"
           strokeDasharray={`${progressDash} ${circ - progressDash}`}
           strokeLinecap="round"
-          style={{ transform: "rotate(-90deg)", transformOrigin: "70px 70px" }}
+          style={{ transform: "rotate(-90deg)", transformOrigin: "90px 90px" }}
         />
+        {/* valor dentro do círculo */}
+        <text x="90" y="82" textAnchor="middle" dominantBaseline="middle" fontSize="38" fontWeight="700" fill="#3E6763" fontFamily="Poppins, sans-serif">
+          {value}%
+        </text>
+        {/* label dentro do círculo */}
+        <text x="90" y="108" textAnchor="middle" dominantBaseline="middle" fontSize="12" fill="#888" fontFamily="Poppins, sans-serif">
+          ↗ Em evolução
+        </text>
       </svg>
-      <div className="gauge-center">
-        <span className="gauge-value-dark">{value}%</span>
-        <span className="gauge-label-dark">↗ Em evolução</span>
-      </div>
     </div>
   );
 }
@@ -98,11 +102,11 @@ function GaugeCircle({ value, meta }) {
 function RadarVerdeSection() {
   const [anoSelecionado, setAnoSelecionado] = useState(null);
   const [verMeta, setVerMeta] = useState(true);
-  const [anoReciclagem, setAnoReciclagem] = useState(2026);
+  const [anoReciclagem, setAnoReciclagem] = useState(2022);
 
   const dadosAtivos = verMeta
     ? dadosMeta
-    : dadosPorAno[anoSelecionado] || dadosPorAno[2026];
+    : dadosPorAno[anoSelecionado] || dadosPorAno[2022];
 
   const totalVolume = dadosAtivos.reduce((acc, d) => acc + d.valor, 0);
 
@@ -150,7 +154,7 @@ function RadarVerdeSection() {
               >
                 Meta
               </button>
-              {[2024, 2025, 2026].map((ano) => (
+              {[2020, 2021, 2022].map((ano) => (
                 <button
                   key={ano}
                   className={`radar-filter-btn ${anoSelecionado === ano && !verMeta ? "active" : ""}`}
@@ -203,18 +207,18 @@ function RadarVerdeSection() {
 
         {/* card direito branco */}
         <div className="radar-media-card-branco">
-          <div className="radar-media-filtros">
-            {[2024, 2025, 2026].map((ano) => (
-              <button
-                key={ano}
-                className={`radar-filter-btn-dark ${anoReciclagem === ano ? "active" : ""}`}
-                onClick={() => setAnoReciclagem(ano)}
-              >
-                {ano}
-              </button>
-            ))}
+
+          {/* topo: ícone trending_up */}
+          <div className="radar-media-topo">
+            <span className="trending-up">
+              <svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="#3E6763" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+                <polyline points="17 6 23 6 23 12" />
+              </svg>
+            </span>
           </div>
 
+          {/* gauge + badge */}
           <div className="radar-media-content">
             <GaugeCircle value={mediaReciclagem} meta={META_RECICLAGEM} />
             <div className="radar-meta-badge-dark">
@@ -222,6 +226,7 @@ function RadarVerdeSection() {
               Meta anual: <strong>{META_RECICLAGEM}% de eficiência</strong>
             </div>
           </div>
+
         </div>
 
       </div>

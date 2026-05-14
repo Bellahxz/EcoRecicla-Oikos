@@ -1,5 +1,8 @@
 {
   "dependencies": {
-    "react-router-dom": "^7.15.0"
+    "@fontsource/poppins": "^5.2.7",
+    "framer-motion": "^12.38.0",
+    "react-router-dom": "^7.15.1",
+    "recharts": "^3.8.1"
   }
 }
