@@ -38,7 +38,7 @@ function EcopanelSection() {
 
       <div className="ecopanel-header">
         <h2 className="ecopanel-title">ecopanel</h2>
-        <p className="ecopanel-subtitle">inteligência e gestão de resíduos!</p>
+        <p className="ecopanel-subtitle">Inteligência e gestão de resíduos!</p>
       </div>
 
       <div className="ecopanel-cards">
