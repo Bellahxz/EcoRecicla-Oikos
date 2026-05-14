@@ -177,11 +177,10 @@
 }
 
 .radar-media-row {
-  margin-top: 250px;
   align-items: center;
   gap: 0;
-  background: linear-gradient(rgba(0, 0, 0, 0.253), rgba(0,0,0,0.253)), url("../../assets/images/forest.png") center center / cover no-repeat;
-  padding: 190px 300px;
+  background: linear-gradient(rgba(0, 0, 0, 0.50), rgba(0, 0, 0, 0.30)), url("../../assets/images/forest.png") center center / cover no-repeat;
+  padding: 220px 80px; 
   width: 120%;
   justify-content: center;
 }
@@ -336,3 +335,474 @@
   background: #7BCDC5;
   flex-shrink: 0;
 }
+
+/* ── BLOCO 3: ZONAS DE ATENÇÃO ────────────────────────────── */
+
+.radar-zonas-container {
+  width: 100%;
+  padding: 60px 80px;
+  display: flex;
+  flex-direction: column;
+  font-family: "Poppins", sans-serif;
+}
+
+/* Cabeçalho do Bloco */
+.zonas-header-main {
+  margin-bottom: 40px;
+  text-align: left;
+  font-family: "Poppins", sans-serif;
+}
+
+.zonas-title {
+  font-size: 56px;
+  font-weight: 800;
+  color: #A789EC; /* Roxo principal */
+  margin: 0;
+  font-family: "Poppins", sans-serif;
+}
+
+.zonas-subtitle {
+  font-size: 18px;
+  color: #000000;
+  margin-top: 10px;
+  max-width: 600px;
+  font-family: "Poppins", sans-serif;
+}
+
+/* Layout Superior: Legenda e Mapa Lado a Lado */
+.zonas-layout-superior {
+  display: flex;
+  gap: 60px;
+  align-items: flex-start;
+  margin-bottom: 60px;
+  font-family: "Poppins", sans-serif;
+}
+
+/* Caixa de Legenda (Esquerda) */
+.zonas-legenda-box {
+  flex: 0.3;
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+  background: white;
+  padding: 40px;
+  border-radius: 24px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.02);
+  font-family: "Poppins", sans-serif;
+}
+
+.legenda-item {
+  display: flex;
+  gap: 15px;
+  align-items: flex-start;
+  font-family: "Poppins", sans-serif;
+}
+
+.dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  margin-top: 6px;
+  flex-shrink: 0;
+  font-family: "Poppins", sans-serif;
+}
+
+.dot.critica { background-color: #ff4d4d; }
+.dot.atencao { background-color: #ffa500; }
+.dot.monitoramento { background-color: #a855f7; }
+.dot.emdia { background-color: #22c55e; }
+
+.legenda-texto strong {
+  display: block;
+  font-size: 18px;
+  color: #333;
+  margin-bottom: 2px;
+}
+
+.legenda-texto span {
+  font-size: 14px;
+  color: #999;
+}
+
+.btn-indicadores {
+  margin-top: 15px;
+  background: white;
+  border: 2px solid #e0e0e0;
+  padding: 12px 24px;
+  border-radius: 999px;
+  color: #7bcdc5;
+  font-size: 18px;
+  font-weight: 550;
+  cursor: pointer;
+  width: fit-content;
+  transition: 0.3s;
+  font-family: "Poppins", sans-serif;
+  display: block;    /* Faz o botão se comportar como bloco */
+  margin: 0 auto;
+}
+
+.btn-indicadores:hover {
+  background: #f8f8f8;
+}
+
+/* Mapa (Direita) */
+.zonas-mapa-wrapper {
+  flex: 1.2;
+  position: relative;
+  background: #fff;
+  border-radius: 32px;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.04);
+  overflow: hidden;
+}
+
+.mapa-img {
+  width: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.mapa-zoom-controls {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.mapa-zoom-controls button {
+  width: 35px;
+  height: 35px;
+  background: white;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  font-size: 20px;
+  color: #666;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+/* ── PANORAMA GERAL (REFATORADO) ─────────────────────────── */
+
+.sub-secao-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #A789EC;
+  margin-bottom: 25px;
+}
+
+.panorama-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  margin-bottom: 60px;
+}
+
+.panorama-card {
+  background: #ffffff; /* Fundo sempre branco conforme a imagem */
+  padding: 24px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  border: 1px solid #f0f0f0;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05); /* Sombra leve para destacar do fundo */
+  transition: transform 0.2s ease;
+}
+
+.panorama-card:hover {
+  transform: translateY(-3px);
+}
+
+/* Ícone Circular Colorido */
+.status-icon-circle {
+  width: 65px;
+  height: 65px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 28px;
+  font-weight: bold;
+  flex-shrink: 0;
+  /* Degradê leve para dar profundidade igual à imagem */
+  box-shadow: inset 0 -3px 6px rgba(0,0,0,0.1);
+}
+
+/* Cores específicas dos ícones (baseado nas classes bg-xxx do seu React) */
+.bg-red .status-icon-circle { 
+  background: linear-gradient(135deg, #ff6b6b, #ff4d4d); 
+}
+.bg-orange .status-icon-circle { 
+  background: linear-gradient(135deg, #ffb347, #ffa500); 
+}
+.bg-purple .status-icon-circle { 
+  background: linear-gradient(135deg, #bc7ff7, #a855f7); 
+}
+.bg-green .status-icon-circle { 
+  background: linear-gradient(135deg, #57e08b, #22c55e); 
+}
+
+/* Informações de Texto */
+.panorama-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.panorama-info strong {
+  font-size: 32px;
+  color: #2d3436; /* Cor escura para o número */
+  font-weight: 800;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.panorama-info span {
+  font-size: 14px;
+  color: #7f8c8d; /* Cinza para a descrição */
+  line-height: 1.2;
+  font-weight: 500;
+}
+/* ── TABELA DE DESTAQUE ──────────────────────────────────── */
+
+.tabela-header-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 30px;
+}
+
+.tabela-desc {
+  color: #888;
+  font-size: 16px;
+  margin-top: 5px;
+}
+
+.btn-ver-todas {
+  margin-top: 15px;
+  background: white;
+  border: 2px solid #e0e0e0;
+  padding: 12px 24px;
+  border-radius: 999px;
+  color: #7bcdc5;
+  font-size: 18px;
+  font-weight: 550;
+  cursor: pointer;
+  width: fit-content;
+  transition: 0.3s;
+  font-family: "Poppins", sans-serif;
+}
+
+.btn-ver-todas:hover {
+  background: #f8f8f8;
+}
+
+.radar-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 12px;
+}
+
+.radar-table th {
+  padding: 0 20px;
+  color: #838383;
+  font-size: 13px;
+  text-transform: uppercase;
+  text-align: left;
+  font-weight: 600;
+}
+
+/* Efeito de "Card" para cada linha da tabela */
+.tabela-row-card td {
+  background: white;
+  padding: 25px 20px;
+  border-top: 1px solid #f8f8f8;
+  border-bottom: 1px solid #f8f8f8;
+}
+
+.tabela-row-card td:first-child {
+  border-left: 1px solid #f8f8f8;
+  border-radius: 20px 0 0 20px;
+}
+
+.tabela-row-card td:last-child {
+  border-right: 1px solid #f8f8f8;
+  border-radius: 0 20px 20px 0;
+}
+
+.sub-nome {
+  font-size: 18px;
+  font-weight: 700;
+  color: #333;
+}
+
+.sub-zona {
+  font-size: 13px;
+  color: #aaa;
+}
+
+/* Badges com estilo Pastel */
+.badge-status {
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.badge-status.critica, 
+.badge-status.crítica { background: #ffebeb !important; color: #ff4d4d !important; }
+
+.badge-status.atencao, 
+.badge-status.atenção { background: #fff4e6 !important; color: #ffa500 !important; }
+
+.badge-status.monitoramento { background: #f3ebff !important; color: #a855f7 !important; }
+
+.badge-status.emdia, 
+.badge-status.em-dia { background: #e8fcf0 !important; color: #22c55e !important; }
+
+/* Barras de Progresso Slim */
+.progress-container {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.progress-label {
+  font-weight: 700;
+  color: #444;
+  min-width: 40px;
+}
+
+.progress-track {
+  flex: 1;
+  height: 8px;
+  background: #f0f0f0;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 10px;
+}
+
+/* BARRAS DE PROGRESSO - CORES VIVAS */
+.progress-fill.critica, .progress-fill.crítica { 
+  background-color: #ff4d4d !important; 
+}
+
+.progress-fill.atencao, .progress-fill.atenção { 
+  background-color: #ffa500 !important; 
+}
+
+.progress-fill.monitoramento { 
+  background-color: #a855f7 !important; 
+}
+
+.progress-fill.emdia, .progress-fill.em-dia { 
+  background-color: #22c55e !important; 
+}
+
+.acao-text {
+  font-size: 14px;
+  color: #666;
+  max-width: 300px;
+}
+
+.btn-detalhes {
+  font-family: "Poppins", sans-serif;
+  background: transparent;
+  border: 1px solid #eee;
+  padding: 8px 18px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-detalhes.critica, .btn-detalhes.crítica { 
+  border-color: #ff4d4d; color: #ff4d4d; }
+
+.btn-detalhes.atencao, .btn-detalhes.atenção { 
+  border-color: #ffa500; color: #ffa500; 
+}
+
+.btn-detalhes.monitoramento { 
+  border-color: #a855f7; color: #a855f7; 
+}
+
+.btn-detalhes.emdia, .btn-detalhes.em-dia { 
+  border-color: #22c55e; color: #22c55e; 
+}
+
+.filtros-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+/* ESTILIZAÇÃO DO FILTRO (SELECT) */
+.filtro-dropdown {
+  margin-top: 15px;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-color: #ffffff;
+  border: 2px solid #7bcdc5;
+  border-radius: 999px;
+  padding: 10px 45px 10px 20px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: #7bcdc5; /* Texto em Roxo para contraste */
+  cursor: pointer;
+  outline: none;
+  transition: all 0.3s ease;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' fill='%237bcdc5' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: calc(100% - 18px) center;
+  box-shadow: 0 4px 6px rgba(123, 205, 197, 0.1);
+}
+
+/* Efeito ao passar o mouse */
+.filtro-dropdown:hover {
+  background-color: #f0faf9;
+  box-shadow: 0 6px 12px rgba(123, 205, 197, 0.2);
+  transform: translateY(-1px);
+}
+
+/* "POR DENTRO" - Estilizando as opções (Dropdown aberto) */
+/* Nota: Estilizar o menu interno do select varia por navegador, 
+   mas estas propriedades ajudam na legibilidade */
+.filtro-dropdown option {
+  font-family: 'Poppins', sans-serif;
+  background-color: #ffffff;
+  color: #333;
+  padding: 15px; /* Espaçamento interno das opções */
+  font-size: 14px;
+}
+
+/* ESTILO DO BOTÃO VER TODAS (Para combinar) */
+.btn-ver-todas {
+  font-family: 'Poppins', sans-serif;
+  background-color: white;
+  border: 2px solid #7bcdc5;
+  color: #7bcdc5;
+  padding: 10px 25px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-ver-todas:hover {
+  background-color: #7bcdc5;
+  color: white;
+  box-shadow: 0 6px 12px rgba(123, 205, 197, 0.3);
+}
+
