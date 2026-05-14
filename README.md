@@ -21,14 +21,14 @@ O **EcoRecicla** transforma esses dados em uma ferramenta de gestão ambiental: 
 | Campo              | Tipo      | Descrição                                                              |
 |--------------------|-----------|------------------------------------------------------------------------|
 | `id`               | `Long`    | Identificador único gerado automaticamente (chave primária)            |
-| `municipio`        | `String`  | Nome do município. Ex: `"São Paulo"`                                   |
-| `estado`           | `String`  | Sigla do estado (UF). Ex: `"SP"`                                       |
+| `municipio`        | `String`  | Nome do município.                                                     |
+| `estado`           | `String`  | Sigla do estado (UF).                                                  |
 | `quantidadeGerada` | `Double`  | Total de resíduos gerados/recebidos, em **toneladas**                  |
 | `taxaReciclagem`   | `Double`  | Percentual de resíduos reciclados em relação ao total gerado (0–100 %) |
-| `ano`              | `Integer` | Ano de referência do registro. Ex: `2022`                              |
+| `ano`              | `Integer` | Ano de referência do registro.                                         |
 
-O campo `quantidadeGerada` é preenchido com a coluna **UP080** (quantidade total recebida).  
-A `taxaReciclagem` é estimada pela razão entre a coluna **UP067** (RPO — resíduos para processamento/reciclagem) e UP080, multiplicada por 100.  
+Para fins práticos o campo `quantidadeGerada` é preenchido com a coluna **UP080** (quantidade total recebida).  
+A `taxaReciclagem` é estimada pela razão entre a coluna **UP067** e UP080, multiplicada por 100.  
 
 ---
 
@@ -45,7 +45,7 @@ A `taxaReciclagem` é estimada pela razão entre a coluna **UP067** (RPO — res
 | `GET`    | `/api/residuos/municipio?nome=...`      | Busca por parte do nome do município                    | 200 / 404 |
 | `GET`    | `/api/residuos/ano/{ano}`              | Filtra por ano de referência                            | 200 / 404 |
 | `GET`    | `/api/residuos/abaixo-da-meta?meta=20`  | Lista municípios com taxa de reciclagem abaixo da meta  | 200       |
-| `POST`   | `/api/residuos/importar-csv`            | Importa dados do CSV do SNIS (`multipart/form-data`)    | 201 / 400 |
+| `POST`   | `/api/residuos/importar-csv`            | Importa dados do CSV do SNIS                            | 201 / 400 |
 
 ---
 
@@ -132,7 +132,7 @@ Fluxo completo de uma requisição no sistema:
                                 ▼
 ┌─────────────────────────────────────────────────────────────────────┐
 │                    H2 Database (arquivo em disco)                   │
-│           ./data/ecorecicla.mv.db — persiste entre reinícios        │
+│           ./data/ecorecicla.mv.db — persistência                    │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -172,7 +172,7 @@ cd backend/oikos
 mvnw.cmd spring-boot:run
 ```
 
-A API sobe em: **http://localhost:8080**
+A API sobe em: **http://localhost:9090**
 
 ---
 
@@ -189,7 +189,7 @@ A API sobe em: **http://localhost:8080**
 
 Com o projeto rodando, acesse no navegador:
 
-**http://localhost:8080/h2-console**
+**http://localhost:9090/h2-console**
 
 Preencha os campos assim:
 
