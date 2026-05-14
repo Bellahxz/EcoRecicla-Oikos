@@ -9,5 +9,4 @@ public class OikosApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(OikosApplication.class, args);
 	}
-
 }
