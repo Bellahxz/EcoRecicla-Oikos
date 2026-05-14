@@ -112,13 +112,13 @@ Fluxo completo de uma requisição no sistema:
 ┌─────────────────────────────────────────────────────────────────────┐
 │                @RestController — RegistroResiduoController          │
 │  Recebe a requisição HTTP, valida o formato e delega ao Service.    │
-│  Devolve ResponseEntity com o status correto (200, 201, 404...).   │
+│  Devolve ResponseEntity com o status correto (200, 201, 404...).    │
 └───────────────────────────────┬─────────────────────────────────────┘
                                 │  Chamada de método Java
                                 ▼
 ┌─────────────────────────────────────────────────────────────────────┐
 │                  @Service — RegistroResiduoService                  │
-│  Contém a lógica de negócio: CRUD, filtros, leitura do CSV.        │
+│  Contém a lógica de negócio: CRUD, filtros, leitura do CSV.         │
 │  Usa Optional<T> para evitar NullPointerException.                  │
 └───────────────────────────────┬─────────────────────────────────────┘
                                 │  Chamada de método Java
@@ -156,10 +156,14 @@ Qualquer exceção lançada no Controller ou Service
 
 - Java 17 ou superior instalado
 - Maven
+- Node.js 20 ou superior instalado
+- npm
 
 ---
 
-### Rodando pelo terminal
+### Backend
+
+#### Rodando pelo terminal
 
 ```bash
 # Entre na pasta do backend
@@ -174,9 +178,7 @@ mvnw.cmd spring-boot:run
 
 A API sobe em: **http://localhost:9090**
 
----
-
-### Rodando pela IDE (IntelliJ / Eclipse)
+#### Rodando pela IDE (IntelliJ / Eclipse)
 
 1. Abra a pasta `backend/oikos` como projeto Maven
 2. Aguarde o download das dependências
@@ -185,9 +187,39 @@ A API sobe em: **http://localhost:9090**
 
 ---
 
+### Frontend
+
+#### Rodando pelo terminal
+
+```bash
+# Entre na pasta do frontend
+cd frontend/frontend
+
+# Instale as dependências (apenas na primeira vez)
+npm install
+
+# Inicie o servidor de desenvolvimento
+npm run dev
+```
+
+A aplicação abre em: **http://localhost:5173**
+
+#### Build para produção
+
+```bash
+cd frontend/frontend
+npm run build
+```
+
+Os arquivos gerados ficam em `frontend/frontend/dist/`.
+
+> O frontend consome a API em `http://localhost:9090`, portanto certifique-se de que o backend já está rodando antes de acessar a aplicação.
+
+---
+
 ### Acessando o H2 Console
 
-Com o projeto rodando, acesse no navegador:
+Com o backend rodando, acesse no navegador:
 
 **http://localhost:9090/h2-console**
 
@@ -206,10 +238,10 @@ Clique em **Connect**. Você verá a tabela `REGISTRO_RESIDUO` com todos os dado
 
 ---
 
-### Testando a importação do CSV (Postman / Insomnia)
+### Testando a importação do CSV via Postman/Insomnia
 
 1. Método: `POST`
-2. URL: `http://localhost:8080/api/residuos/importar-csv`
+2. URL: `http://localhost:9090/api/residuos/importar-csv`
 3. Body: `form-data`
 4. Chave: `arquivo` — Tipo: **File** — Valor: selecione o `.csv` do SNIS
 5. Envie — a resposta mostrará quantos registros foram importados
