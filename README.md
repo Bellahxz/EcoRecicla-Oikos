@@ -10,7 +10,9 @@
 
 Prefeituras e ONGs lidam com grandes volumes de dados sobre geração de resíduos e reciclagem, disponibilizados pelo SNIS (Sistema Nacional de Informações sobre Saneamento) em arquivos CSV brutos, difíceis de consultar e analisar.
 
-O **EcoRecicla** transforma esses dados em uma ferramenta de gestão ambiental: permite importar os arquivos do SNIS, visualizar os registros por município, identificar quais cidades estão abaixo da meta de reciclagem e gerenciar os dados via CRUD completo.
+O EcoRecicla — Oikos transforma esses dados em uma ferramenta de gestão ambiental: permite importar os arquivos do SNIS, visualizar os registros por município, identificar quais cidades estão abaixo da meta de reciclagem e gerenciar os dados via CRUD completo.
+
+O nome Oikos tem origem no grego antigo e significa “casa” ou “ambiente em que vivemos”. A palavra também está relacionada à origem do termo “ecologia”, representando o cuidado com o meio ambiente e a gestão sustentável dos recursos naturais. Assim, reforça a proposta do projeto de conscientização ambiental, organização de dados ecológicos e incentivo à reciclagem de forma acessível e eficiente.
 
 ---
 
