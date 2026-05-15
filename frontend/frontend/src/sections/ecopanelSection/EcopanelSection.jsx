@@ -1,12 +1,15 @@
 import "./EcopanelSection.css";
-import { useNavigate } from "react-router-dom";
 
 import sheetImg from "../../assets/images/sheet.png";
 import truckImg from "../../assets/images/truck.png";
 import attentionImg from "../../assets/images/attention.png";
 
 function EcopanelSection() {
-  const navigate = useNavigate();
+
+  function handleClick(route) {
+    const el = document.getElementById(route);
+    if (el) el.scrollIntoView({ behavior: "smooth" });
+  }
 
   const cards = [
     {
@@ -14,14 +17,14 @@ function EcopanelSection() {
       title: "Média reciclagem",
       description: <><strong>Percentual médio</strong> de resíduos desviados de aterros sanitários.</>,
       btn: "Ver metas!",
-      route: "/radar-verde/media",
+      route: "radar-media",
     },
     {
       img: truckImg,
       title: "Volume total",
       description: <>Soma da quantidade gerada de <strong>todos os municípios</strong> exibidos.</>,
       btn: "Ver ranking!",
-      route: "/radar-verde/volume",
+      route: "radar-verde",
       highlight: true,
     },
     {
@@ -29,7 +32,7 @@ function EcopanelSection() {
       title: "Zonas de atenção!",
       description: <>Municípios que <strong>não atingiram as metas</strong> de sustentabilidade.</>,
       btn: "Ver zonas!",
-      route: "/radar-verde/zonas",
+      route: "radar-zonas",
     },
   ];
 
@@ -50,7 +53,7 @@ function EcopanelSection() {
             <img src={card.img} alt={card.title} className="card-img" />
             <h3 className="card-title">{card.title}</h3>
             <p className="card-description">{card.description}</p>
-            <button className="card-btn" onClick={() => navigate(card.route)}>
+            <button className="card-btn" onClick={() => handleClick(card.route)}>
               {card.btn}
             </button>
           </div>

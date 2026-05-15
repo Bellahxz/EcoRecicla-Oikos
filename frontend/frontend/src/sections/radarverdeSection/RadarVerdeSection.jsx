@@ -2,6 +2,8 @@ import { useState } from "react";
 import "./RadarVerdeSection.css";
 import truckImg from "../../assets/images/truck.png";
 import sheetImg from "../../assets/images/sheet.png";
+import MapaBrasil from "./MapaBrasil";
+import "./MapaBrasil.css";
 import {
   BarChart,
   Bar,
@@ -294,10 +296,7 @@ function RadarVerdeSection() {
 
           {/* Mapa Visual */}
           <div className="zonas-mapa-wrapper">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/b/be/Sao_Paulo_city_subprefeituras.png" alt="Mapa" className="mapa-img" />
-            <div className="mapa-zoom-controls">
-              <button>+</button><button>-</button>
-            </div>
+            <MapaBrasil anoInicial={2022} />
           </div>
         </div>
 

@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import HomePage from "../pages/HomePage.jsx";
+import NovoCicloSection from "../sections/novocicloSection/NovoCicloSection.jsx";
 
 function AppRoutes() {
   return (
@@ -8,10 +9,8 @@ function AppRoutes() {
 
       <Routes>
 
-        <Route
-          path="/"
-          element={<HomePage />}
-        />
+        <Route path="/" element={<HomePage />}/>
+        <Route path="/novo-ciclo" element={<NovoCicloSection />} />
 
       </Routes>
 

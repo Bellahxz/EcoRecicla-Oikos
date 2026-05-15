@@ -1,5 +1,6 @@
 import { useState } from "react";
 import "./NovoCicloSection.css";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 const estadosBR = [
   "AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS",
@@ -15,7 +16,8 @@ const registrosMock = [
 ];
 
 function NovoCicloSection() {
-  const [aba, setAba] = useState("novo");
+  const [searchParams] = useSearchParams();
+  const [aba, setAba] = useState(searchParams.get("aba") || "novo");
   const [form, setForm] = useState({
     municipio: "", estado: "", quantidade: "", reciclagem: "", ano: ""
   });
@@ -27,6 +29,26 @@ function NovoCicloSection() {
   const links = ["Home", "Ecopanel", "Radar Verde", "Novo Ciclo", "Raízes"];
   const [activeLink, setActiveLink] = useState("Novo Ciclo");
   const [hoveredLink, setHoveredLink] = useState(null);
+  const navigate = useNavigate();
+
+  function handleLinkClick(link) {
+    setActiveLink(link);
+    if (link === "Novo Ciclo") {
+      navigate("/novo-ciclo");
+    } else {
+      const ids = {
+        "Home": "home",
+        "Ecopanel": "ecopanel",
+        "Radar Verde": "radar-verde",
+        "Raízes": "raizes",
+      };
+      navigate("/");
+      setTimeout(() => {
+        const el = document.getElementById(ids[link]);
+        if (el) el.scrollIntoView({ behavior: "smooth" });
+      }, 100);
+    }
+  }
 
   function handleChange(e) {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -72,7 +94,7 @@ function NovoCicloSection() {
             <li
               key={link}
               className={hoveredLink === link || (!hoveredLink && activeLink === link) ? "active" : ""}
-              onClick={() => setActiveLink(link)}
+              onClick={() => handleLinkClick(link)}
               onMouseEnter={() => setHoveredLink(link)}
               onMouseLeave={() => setHoveredLink(null)}
             >
