@@ -66,6 +66,10 @@ function NovoCicloSection() {
     setForm({ ...form, [e.target.name]: e.target.value });
   }
 
+  function emitirAtualizacaoResiduos() {
+    window.dispatchEvent(new Event("residuosAtualizados"));
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
     setLoadingSubmit(true);
@@ -94,6 +98,7 @@ function NovoCicloSection() {
         setRegistros([...registros, novoResiduo]);
       }
 
+      emitirAtualizacaoResiduos();
       setForm({ municipio: "", estado: "", quantidadeGerada: "", taxaReciclagem: "", ano: "" });
       setMensagemSucesso(modoEdicao ? "atualizado" : "salvo");
       if (modoEdicao) {
@@ -137,6 +142,7 @@ function NovoCicloSection() {
       try {
         await deletarResiduo(id);
         setRegistros(registros.filter(r => r.id !== id));
+        emitirAtualizacaoResiduos();
         setMensagemSucesso("excluído");
         setSucessoGerenciar(true);
         setSucessoNovo(false);
@@ -154,13 +160,20 @@ function NovoCicloSection() {
       setLoadingSubmit(true);
       setErro(null);
       try {
-        await importarCsv(file);
-        setMensagemSucesso("importado");
-        setSucessoNovo(true);
-        setSucessoGerenciar(false);
-        setTimeout(() => setSucessoNovo(false), 3000);
-        const dados = await fetchResiduos();
-        setRegistros(dados);
+        const resultado = await importarCsv(file);
+        const importados = resultado && typeof resultado.registrosImportados === 'number' ? resultado.registrosImportados : 0;
+
+        if (importados === 0) {
+          setErro("Nenhum registro foi importado. Verifique se os registros do arquivo já existem no sistema.");
+        } else {
+          emitirAtualizacaoResiduos();
+          setMensagemSucesso(`${importados} registro${importados > 1 ? 's' : ''} importado${importados > 1 ? 's' : ''}`);
+          setSucessoNovo(true);
+          setSucessoGerenciar(false);
+          setTimeout(() => setSucessoNovo(false), 3000);
+          const dados = await fetchResiduos();
+          setRegistros(dados);
+        }
       } catch (error) {
         setErro(error.message || "Erro ao importar CSV");
       } finally {
@@ -213,13 +226,14 @@ function NovoCicloSection() {
                 setEditandoId(null);
                 setRegistroEditado(null);
                 setForm({ municipio: "", estado: "", quantidadeGerada: "", taxaReciclagem: "", ano: "" });
+                setErro(null);
               }}
             >
               + Novo Registro
             </button>
             <button
               className={`novociclo-tab ${aba === "gerenciar" ? "active" : ""}`}
-              onClick={() => setAba("gerenciar")}
+              onClick={() => { setAba("gerenciar"); setErro(null); }}
             >
               Gerenciar Dados
             </button>
@@ -238,7 +252,7 @@ function NovoCicloSection() {
               )}
 
               {erro && (
-                <div className="novociclo-erro">❌ {erro}</div>
+                <div className="novociclo-erro">{erro}</div>
               )}
 
               <form className="novociclo-form" onSubmit={handleSubmit}>
@@ -304,7 +318,7 @@ function NovoCicloSection() {
             <div className="novociclo-card">
               <h3 className="novociclo-card-title">Registros Cadastrados</h3>
 
-              {erro && <div className="novociclo-erro">❌ {erro}</div>}
+              {erro && <div className="novociclo-erro">{erro}</div>}
 
               {sucessoGerenciar && (
                 <div className="novociclo-sucesso">
@@ -337,8 +351,19 @@ function NovoCicloSection() {
                         <td>{r.taxaReciclagem}%</td>
                         <td>{r.ano}</td>
                         <td className="td-acoes">
-                          <button className="btn-editar" onClick={() => handleEditar(r)}>✏️</button>
-                          <button className="btn-excluir" onClick={() => handleExcluir(r.id)}>🗑️</button>
+                          <button className="btn-editar btn-icon" onClick={() => handleEditar(r)} aria-label="Editar">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                              <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z" fill="#3E6763" />
+                              <path d="M20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" fill="#3E6763" />
+                            </svg>
+                          </button>
+                          <button className="btn-excluir btn-icon" onClick={() => handleExcluir(r.id)} aria-label="Excluir">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                              <path d="M6 7h12v13a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V7z" stroke="#3E6763" strokeWidth="1.2" fill="none" />
+                              <path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" stroke="#3E6763" strokeWidth="1.2" fill="none" />
+                              <path d="M10 11v6M14 11v6" stroke="#3E6763" strokeWidth="1.2" strokeLinecap="round" />
+                            </svg>
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -354,7 +379,7 @@ function NovoCicloSection() {
                 <button type="button" className="modal-close" onClick={handleFecharModal}>×</button>
                 <h3 className="novociclo-card-title">Editar Registro</h3>
 
-                {erro && <div className="novociclo-erro">❌ {erro}</div>}
+                {erro && <div className="novociclo-erro">{erro}</div>}
 
                 <form className="novociclo-form" onSubmit={handleSubmit}>
                   <div className="form-row">

@@ -32,9 +32,13 @@ function calcularStatus(taxaReciclagem, meta) {
 function GaugeCircle({ value, meta }) {
   const r = 70;
   const circ = 2 * Math.PI * r;
-  const percentualMeta = Math.min((value / meta) * 100, 100);
-  const progressDash = (percentualMeta / 100) * circ;
-  const metaDash = circ;
+  // progressDash: posição atual (valor em % do 0..100)
+  const progressPercent = Math.max(0, Math.min(Number(value) || 0, 100));
+  const progressDash = (progressPercent / 100) * circ;
+
+  // metaDash: arco que representa a meta (meta em % do 0..100)
+  const metaPercent = Math.max(0, Math.min(Number(meta) || 0, 100));
+  const metaDash = (metaPercent / 100) * circ;
 
   return (
     <div className="gauge-wrapper">
@@ -45,16 +49,21 @@ function GaugeCircle({ value, meta }) {
             <stop offset="100%" stopColor="#3E6763" />
           </linearGradient>
         </defs>
+        {/* base track */}
         <circle cx="90" cy="90" r={r} fill="none" stroke="#e8f5f3" strokeWidth="13" />
+
+        {/* meta arc: mostra onde está a meta (ex: 85%) como arco claro */}
         <circle
           cx="90" cy="90" r={r}
           fill="none"
-          stroke="#b2dfdb"
+          stroke="#bfeee7"
           strokeWidth="13"
           strokeDasharray={`${metaDash} ${circ - metaDash}`}
           strokeLinecap="round"
           style={{ transform: "rotate(-90deg)", transformOrigin: "90px 90px" }}
         />
+
+        {/* progresso atual */}
         <circle
           cx="90" cy="90" r={r}
           fill="none"
@@ -188,7 +197,6 @@ useEffect(() => {
   let intervalId;
 
   async function carregarZonas() {
-    // Loading apenas na primeira carga
     if (primeiraCarga.current) {
       setLoadingZonas(true);
     }
@@ -196,18 +204,7 @@ useEffect(() => {
     setErroZonas(null);
 
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/residuos/abaixo-da-meta?meta=${metaFiltro}`
-      );
-
-      if (!response.ok && response.status !== 404) {
-        throw new Error(`Erro ao buscar zonas: ${response.status}`);
-      }
-
-      const data =
-        response.status === 404
-          ? []
-          : await response.json();
+      const data = await fetchResiduos();
 
       const zonas = data.map((registro) => {
         const status = calcularStatus(
@@ -275,8 +272,17 @@ useEffect(() => {
     carregarZonas();
   }, 10000);
 
+  function handleResiduosAtualizados() {
+    carregarZonas();
+  }
+
+  window.addEventListener("residuosAtualizados", handleResiduosAtualizados);
+
   // Cleanup
-  return () => clearInterval(intervalId);
+  return () => {
+    clearInterval(intervalId);
+    window.removeEventListener("residuosAtualizados", handleResiduosAtualizados);
+  };
 
 }, [metaFiltro]);
 
@@ -287,7 +293,7 @@ useEffect(() => {
   // Filtro por status nas zonas
   const dadosFiltrados = filtroStatus === "Todos"
     ? dadosZonas
-    : dadosZonas.filter(d => d.status === filtroStatus);
+    : dadosZonas.filter(d => d.status?.toLowerCase() === filtroStatus.toLowerCase());
 
   // Contadores para o Panorama Geral (baseado nos dados reais do backend)
   const contagem = {
@@ -341,11 +347,7 @@ useEffect(() => {
             </div>
           </div>
 
-          {loadingEstados ? (
-            <div className="radar-loading">Carregando ranking estadual...</div>
-          ) : erroEstados ? (
-            <div className="radar-error">Erro ao carregar ranking: {erroEstados}</div>
-          ) : (
+          <div className="ranking-container">
             <ResponsiveContainer width="100%" height={400}>
               <BarChart data={dadosAtivos} margin={{ top: 20, right: 20, left: 0, bottom: 0 }}>
                 <defs>
@@ -365,7 +367,17 @@ useEffect(() => {
                 <Bar dataKey="valor" fill="url(#barGradient)" radius={[8, 8, 0, 0]} label={{ position: "top", fill: "white", fontSize: 13, formatter: (value) => Math.round(value).toLocaleString("pt-BR") }} />
               </BarChart>
             </ResponsiveContainer>
-          )}
+
+            {loadingEstados && (
+              <div className="ranking-overlay">
+                <div className="spinner" />
+              </div>
+            )}
+
+            {erroEstados && (
+              <div className="ranking-overlay ranking-error-overlay">Erro ao carregar ranking</div>
+            )}
+          </div>
         </div>
 
       </div>
@@ -416,13 +428,23 @@ useEffect(() => {
           </div>
 
           <div className="radar-media-content">
-            {loadingMedia ? (
-              <div className="radar-loading">Carregando média de eficiência...</div>
-            ) : erroMedia ? (
-              <div className="radar-error">{erroMedia}</div>
-            ) : (
+            <div className="gauge-container">
+              {/* Sempre mostra o gauge com o último valor conhecido para evitar flicker */}
               <GaugeCircle value={mediaEficiencia} meta={META_RECICLAGEM} />
-            )}
+
+              {/* Overlay de loading mantém o gauge visível por baixo */}
+              {loadingMedia && (
+                <div className="gauge-overlay gauge-loading-overlay">
+                  <div className="spinner" />
+                </div>
+              )}
+
+              {/* Overlay de erro exibido sobre o gauge sem remover o componente */}
+              {erroMedia && (
+                <div className="gauge-overlay gauge-error-overlay">{erroMedia}</div>
+              )}
+            </div>
+
             <div className="radar-meta-badge-dark">
               <span className="radar-meta-dot-green" />
               Meta anual: <strong>{META_RECICLAGEM}% de eficiência</strong>
@@ -437,7 +459,7 @@ useEffect(() => {
       <div id="radar-zonas" className="radar-zonas-container">
         <div className="zonas-header-main">
           <h2 className="zonas-title">Zonas de atenção</h2>
-          <p className="zonas-subtitle">Municípios que não atingiram as metas de sustentabilidade (taxa de reciclagem abaixo de {metaFiltro}%).</p>
+          <p className="zonas-subtitle">Municípios classificados por status de reciclagem em relação à meta de {metaFiltro}%.</p>
         </div>
 
         <div className="zonas-layout-superior">
@@ -542,7 +564,7 @@ useEffect(() => {
           ) : dadosFiltrados.length === 0 ? (
             <p className="novociclo-vazio">
               {filtroStatus === "Todos"
-                ? `Nenhum município encontrado abaixo de ${metaFiltro}% de reciclagem.`
+                ? `Nenhum município encontrado.`
                 : `Nenhum município com status "${filtroStatus}" encontrado.`}
             </p>
           ) : (
