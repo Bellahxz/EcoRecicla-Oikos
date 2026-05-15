@@ -23,7 +23,7 @@ function EcopanelSection() {
     {
       img: truckImg,
       title: "Volume total",
-      description: <>Soma da quantidade gerada de <strong>todos os municípios</strong> exibidos.</>,
+      description: <>Soma da quantidade gerada de <strong>todos os estados</strong> exibidos.</>,
       btn: "Ver ranking!",
       anchor: "radar-volume",
       highlight: true,

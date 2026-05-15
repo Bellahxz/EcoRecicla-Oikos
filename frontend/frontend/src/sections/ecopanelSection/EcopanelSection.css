@@ -22,7 +22,7 @@
   -webkit-text-fill-color: transparent;
   background-clip: text;
   letter-spacing: -2px;
-  line-height: 1;
+  line-height: 1.1;
 }
 
 .ecopanel-subtitle {
@@ -76,13 +76,13 @@
 .card-title {
   font-size: 47px;
   font-weight: 700;
-  line-height: 1;
+  line-height: 1.3;
   background: linear-gradient(135deg, #A789EC, #7B4FBF);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   margin-bottom: 30px;
-  margin-top: 70px;
+  margin-top: 60px;
 }
 
 .ecopanel-card--highlight .card-title {
