@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import "./RadarVerdeSection.css";
 import truckImg from "../../assets/images/truck.png";
 import sheetImg from "../../assets/images/sheet.png";
@@ -9,46 +9,15 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  ReferenceLine,
   ResponsiveContainer,
 } from "recharts";
-
-
-const dadosMeta = [
-  { municipio: "Metrópole", valor: 1500 },
-  { municipio: "Alpha", valor: 1200 },
-  { municipio: "Cidade Bela", valor: 1100 },
-  { municipio: "Paulínea", valor: 800 },
-];
-
-const dadosPorAno = {
-  2020: [
-    { municipio: "Metrópole", valor: 1300 },
-    { municipio: "Alpha", valor: 950 },
-    { municipio: "Cidade Bela", valor: 870 },
-    { municipio: "Paulínea", valor: 620 },
-  ],
-  2021: [
-    { municipio: "Metrópole", valor: 1450 },
-    { municipio: "Alpha", valor: 1100 },
-    { municipio: "Cidade Bela", valor: 980 },
-    { municipio: "Paulínea", valor: 750 },
-  ],
-  2022: [
-    { municipio: "Metrópole", valor: 1500 },
-    { municipio: "Alpha", valor: 1200 },
-    { municipio: "Cidade Bela", valor: 1100 },
-    { municipio: "Paulínea", valor: 800 },
-  ],
-};
+import { fetchResiduos } from "../../services/api";
 
 const META_RECICLAGEM = 85;
 
-const dadosReciclagemPorAno = {
-  2020: 58,
-  2021: 65,
-  2022: 72,
-};
+function formatarEstado(estado) {
+  return estado?.trim().toUpperCase() || "N/D";
+}
 
 function GaugeCircle({ value, meta }) {
   const r = 70;
@@ -112,26 +81,83 @@ function getStatusColor(status) {
 
 function RadarVerdeSection() {
   const [anoSelecionado, setAnoSelecionado] = useState(null);
-  const [verMeta, setVerMeta] = useState(true);
-  const [anoReciclagem, setAnoReciclagem] = useState(2022);
+  const [dadosEstados, setDadosEstados] = useState([]);
+  const [loadingEstados, setLoadingEstados] = useState(true);
+  const [erroEstados, setErroEstados] = useState(null);
 
-  const dadosAtivos = verMeta
-    ? dadosMeta
-    : dadosPorAno[anoSelecionado] || dadosPorAno[2022];
+  const [anoMedia, setAnoMedia] = useState(null);
+  const [mediaEficiencia, setMediaEficiencia] = useState(0);
+  const [loadingMedia, setLoadingMedia] = useState(true);
+  const [erroMedia, setErroMedia] = useState(null);
 
-  const totalVolume = dadosAtivos.reduce((acc, d) => acc + d.valor, 0);
+  useEffect(() => {
+    async function carregarEstados() {
+      setLoadingEstados(true);
+      setErroEstados(null);
+      try {
+        const residuos = await fetchResiduos(anoSelecionado);
+
+        const mapaEstados = residuos.reduce((map, registro) => {
+          const estado = formatarEstado(registro.estado);
+          const quantidade = Number(registro.quantidadeGerada) || 0;
+          map[estado] = (map[estado] || 0) + quantidade;
+          return map;
+        }, {});
+
+        const listaEstados = Object.entries(mapaEstados)
+          .map(([estado, valor]) => ({ estado, valor }))
+          .sort((a, b) => b.valor - a.valor);
+
+        setDadosEstados(listaEstados);
+      } catch (error) {
+        setErroEstados(error.message || "Erro ao carregar dados");
+      } finally {
+        setLoadingEstados(false);
+      }
+    }
+
+    carregarEstados();
+  }, [anoSelecionado]);
+
+  useEffect(() => {
+    async function carregarMedia() {
+      setLoadingMedia(true);
+      setErroMedia(null);
+      try {
+        const residuos = await fetchResiduos(anoMedia);
+        const media = residuos.length > 0
+          ? residuos.reduce((sum, reg) => sum + (Number(reg.taxaReciclagem) || 0), 0) / residuos.length
+          : 0;
+        setMediaEficiencia(Math.round(media));
+      } catch (error) {
+        setErroMedia(error.message || "Erro ao carregar média");
+      } finally {
+        setLoadingMedia(false);
+      }
+    }
+
+    carregarMedia();
+  }, [anoMedia]);
+
+  const dadosAtivos = useMemo(() => dadosEstados, [dadosEstados]);
+  const totalVolume = Math.round(dadosAtivos.reduce((acc, d) => acc + d.valor, 0));
+  const totalVolumeFormatado = totalVolume.toLocaleString("pt-BR");
 
   function handleAno(ano) {
     setAnoSelecionado(ano);
-    setVerMeta(false);
   }
 
-  function handleMeta() {
-    setVerMeta(true);
+  function handleTodos() {
     setAnoSelecionado(null);
   }
 
-  const mediaReciclagem = dadosReciclagemPorAno[anoReciclagem];
+  function handleAnoMedia(ano) {
+    setAnoMedia(ano);
+  }
+
+  function handleTodosMedia() {
+    setAnoMedia(null);
+  }
 
   const dadosZonas = [
   { id: 1, municipio: "São Miguel Paulista", regiao: "Leste", estado: "SP", status: "Crítica", progresso: 38, acao: "Reforçar coleta seletiva e educação ambiental" },
@@ -172,7 +198,7 @@ function RadarVerdeSection() {
           <div className="radar-volume-box">
             <span className="radar-volume-label">Volume total</span>
             <span className="radar-volume-number">
-              {totalVolume.toLocaleString("pt-BR")}
+              {totalVolumeFormatado}
             </span>
             <span className="radar-volume-unit">toneladas</span>
           </div>
@@ -180,18 +206,18 @@ function RadarVerdeSection() {
 
         <div className="radar-chart-box">
           <div className="radar-chart-header">
-            <span className="radar-chart-title">Ranking de Geração Municipal</span>
+            <span className="radar-chart-title">Ranking de Geração Estadual</span>
             <div className="radar-filters">
               <button
-                className={`radar-filter-btn ${verMeta ? "active" : ""}`}
-                onClick={handleMeta}
+                className={`radar-filter-btn ${anoSelecionado === null ? "active" : ""}`}
+                onClick={handleTodos}
               >
-                Meta
+                Todos
               </button>
               {[2020, 2021, 2022].map((ano) => (
                 <button
                   key={ano}
-                  className={`radar-filter-btn ${anoSelecionado === ano && !verMeta ? "active" : ""}`}
+                  className={`radar-filter-btn ${anoSelecionado === ano ? "active" : ""}`}
                   onClick={() => handleAno(ano)}
                 >
                   {ano}
@@ -200,27 +226,31 @@ function RadarVerdeSection() {
             </div>
           </div>
 
-          <ResponsiveContainer width="100%" height={400}>
-            <BarChart data={dadosAtivos} margin={{ top: 20, right: 20, left: 0, bottom: 0 }}>
-              <defs>
-                <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#72B7AE" />
-                  <stop offset="100%" stopColor="#3E6763" />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" vertical={false} />
-              <XAxis dataKey="municipio" tick={{ fill: "#ccc", fontSize: 13 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: "#ccc", fontSize: 13 }} axisLine={false} tickLine={false} />
-              <Tooltip
-                contentStyle={{ background: "#2a1a4a", border: "none", borderRadius: 12, color: "white" }}
-                cursor={{ fill: "rgba(255,255,255,0.05)" }}
-              />
-              <Bar dataKey="valor" fill="url(#barGradient)" radius={[8, 8, 0, 0]} label={{ position: "top", fill: "white", fontSize: 13 }} />
-              {verMeta && (
-                <ReferenceLine y={1000} stroke="#fff" strokeDasharray="6 3" label={{ value: "Meta", fill: "#fff", fontSize: 13 }} />
-              )}
-            </BarChart>
-          </ResponsiveContainer>
+          {loadingEstados ? (
+            <div className="radar-loading">Carregando ranking estadual...</div>
+          ) : erroEstados ? (
+            <div className="radar-error">Erro ao carregar ranking: {erroEstados}</div>
+          ) : (
+            <ResponsiveContainer width="100%" height={400}>
+              <BarChart data={dadosAtivos} margin={{ top: 20, right: 20, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#72B7AE" />
+                    <stop offset="100%" stopColor="#3E6763" />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" vertical={false} />
+                <XAxis dataKey="estado" tick={{ fill: "#ccc", fontSize: 13 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: "#ccc", fontSize: 13 }} tickFormatter={(value) => Math.round(value).toLocaleString("pt-BR")} axisLine={false} tickLine={false} />
+                <Tooltip
+                  contentStyle={{ background: "#2a1a4a", border: "none", borderRadius: 12, color: "white" }}
+                  cursor={{ fill: "rgba(255,255,255,0.05)" }}
+                  formatter={(value) => [Math.round(value).toLocaleString("pt-BR"), "Total (ton)"]}
+                />
+                <Bar dataKey="valor" fill="url(#barGradient)" radius={[8, 8, 0, 0]} label={{ position: "top", fill: "white", fontSize: 13, formatter: (value) => Math.round(value).toLocaleString("pt-BR") }} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
         </div>
 
       </div>
@@ -252,9 +282,33 @@ function RadarVerdeSection() {
             </span>
           </div>
 
+          <div className="radar-media-filters">
+            <button
+              className={`radar-filter-btn ${anoMedia === null ? "active" : ""}`}
+              onClick={handleTodosMedia}
+            >
+              Todos
+            </button>
+            {[2020, 2021, 2022].map((ano) => (
+              <button
+                key={ano}
+                className={`radar-filter-btn ${anoMedia === ano ? "active" : ""}`}
+                onClick={() => handleAnoMedia(ano)}
+              >
+                {ano}
+              </button>
+            ))}
+          </div>
+
           {/* gauge + badge */}
           <div className="radar-media-content">
-            <GaugeCircle value={mediaReciclagem} meta={META_RECICLAGEM} />
+            {loadingMedia ? (
+              <div className="radar-loading">Carregando média de eficiência...</div>
+            ) : erroMedia ? (
+              <div className="radar-error">{erroMedia}</div>
+            ) : (
+              <GaugeCircle value={mediaEficiencia} meta={META_RECICLAGEM} />
+            )}
             <div className="radar-meta-badge-dark">
               <span className="radar-meta-dot-green" />
               Meta anual: <strong>{META_RECICLAGEM}% de eficiência</strong>

@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "./NovoCicloSection.css";
+import { fetchResiduos, criarResiduo, atualizarResiduo, deletarResiduo, importarCsv } from "../../services/api";
 
 const estadosBR = [
   "AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS",
@@ -7,22 +8,39 @@ const estadosBR = [
   "SP","SE","TO"
 ];
 
-const registrosMock = [
-  { id: 1, municipio: "Metrópole", estado: "SP", quantidade: 1500, reciclagem: 72, ano: 2026 },
-  { id: 2, municipio: "Alpha", estado: "RJ", quantidade: 1200, reciclagem: 65, ano: 2026 },
-  { id: 3, municipio: "Cidade Bela", estado: "MG", quantidade: 1100, reciclagem: 58, ano: 2025 },
-  { id: 4, municipio: "Paulínea", estado: "SP", quantidade: 800, reciclagem: 45, ano: 2025 },
-];
-
 function NovoCicloSection() {
   const [aba, setAba] = useState("novo");
   const [form, setForm] = useState({
-    municipio: "", estado: "", quantidade: "", reciclagem: "", ano: ""
+    municipio: "", estado: "", quantidadeGerada: "", taxaReciclagem: "", ano: ""
   });
-  const [registros, setRegistros] = useState(registrosMock);
+  const [registros, setRegistros] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [erro, setErro] = useState(null);
   const [editandoId, setEditandoId] = useState(null);
+  const [registroEditado, setRegistroEditado] = useState(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [csvNome, setCsvNome] = useState(null);
-  const [sucesso, setSucesso] = useState(false);
+  const [sucessoNovo, setSucessoNovo] = useState(false);
+  const [sucessoGerenciar, setSucessoGerenciar] = useState(false);
+  const [mensagemSucesso, setMensagemSucesso] = useState("");
+  const [loadingSubmit, setLoadingSubmit] = useState(false);
+
+  useEffect(() => {
+    async function carregarRegistros() {
+      setLoading(true);
+      setErro(null);
+      try {
+        const dados = await fetchResiduos();
+        setRegistros(dados);
+      } catch (error) {
+        setErro(error.message || "Erro ao carregar registros");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    carregarRegistros();
+  }, []);
 
   const links = ["Home", "Ecopanel", "Radar Verde", "Novo Ciclo", "Raízes"];
   const [activeLink, setActiveLink] = useState("Novo Ciclo");
@@ -32,34 +50,112 @@ function NovoCicloSection() {
     setForm({ ...form, [e.target.name]: e.target.value });
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
-    if (editandoId !== null) {
-      setRegistros(registros.map(r =>
-        r.id === editandoId ? { ...form, id: editandoId, quantidade: Number(form.quantidade), reciclagem: Number(form.reciclagem), ano: Number(form.ano) } : r
-      ));
-      setEditandoId(null);
-    } else {
-      setRegistros([...registros, { ...form, id: Date.now(), quantidade: Number(form.quantidade), reciclagem: Number(form.reciclagem), ano: Number(form.ano) }]);
+    setLoadingSubmit(true);
+    setErro(null);
+
+    try {
+      const dadosResiduo = {
+        municipio: form.municipio,
+        estado: form.estado,
+        quantidadeGerada: Number(form.quantidadeGerada),
+        taxaReciclagem: Number(form.taxaReciclagem),
+        ano: Number(form.ano)
+      };
+
+      const modoEdicao = editandoId !== null;
+      if (modoEdicao) {
+        await atualizarResiduo(editandoId, dadosResiduo);
+        setRegistros(registros.map(r =>
+          r.id === editandoId ? { ...dadosResiduo, id: editandoId } : r
+        ));
+        setEditandoId(null);
+        setRegistroEditado(null);
+        setIsEditModalOpen(false);
+      } else {
+        const novoResiduo = await criarResiduo(dadosResiduo);
+        setRegistros([...registros, novoResiduo]);
+      }
+
+      setForm({ municipio: "", estado: "", quantidadeGerada: "", taxaReciclagem: "", ano: "" });
+      setMensagemSucesso(modoEdicao ? "atualizado" : "salvo");
+      if (modoEdicao) {
+        setSucessoGerenciar(true);
+        setSucessoNovo(false);
+        setTimeout(() => setSucessoGerenciar(false), 3000);
+      } else {
+        setSucessoNovo(true);
+        setSucessoGerenciar(false);
+        setTimeout(() => setSucessoNovo(false), 3000);
+      }
+    } catch (error) {
+      setErro(error.message || "Erro ao salvar registro");
+    } finally {
+      setLoadingSubmit(false);
     }
-    setForm({ municipio: "", estado: "", quantidade: "", reciclagem: "", ano: "" });
-    setSucesso(true);
-    setTimeout(() => setSucesso(false), 3000);
   }
 
   function handleEditar(r) {
-    setForm({ municipio: r.municipio, estado: r.estado, quantidade: String(r.quantidade), reciclagem: String(r.reciclagem), ano: String(r.ano) });
+    setForm({
+      municipio: r.municipio,
+      estado: r.estado,
+      quantidadeGerada: String(r.quantidadeGerada),
+      taxaReciclagem: String(r.taxaReciclagem),
+      ano: String(r.ano)
+    });
     setEditandoId(r.id);
-    setAba("novo");
+    setRegistroEditado(r);
+    setIsEditModalOpen(true);
   }
 
-  function handleExcluir(id) {
-    setRegistros(registros.filter(r => r.id !== id));
+  function handleFecharModal() {
+    setIsEditModalOpen(false);
+    setRegistroEditado(null);
+    setEditandoId(null);
+    setForm({ municipio: "", estado: "", quantidadeGerada: "", taxaReciclagem: "", ano: "" });
   }
 
-  function handleCsv(e) {
+  async function handleExcluir(id) {
+    if (window.confirm("Tem certeza que deseja excluir este registro?")) {
+      try {
+        await deletarResiduo(id);
+        setRegistros(registros.filter(r => r.id !== id));
+        setMensagemSucesso("excluído");
+        setSucessoGerenciar(true);
+        setSucessoNovo(false);
+        setTimeout(() => setSucessoGerenciar(false), 3000);
+      } catch (error) {
+        setErro(error.message || "Erro ao excluir registro");
+      }
+    }
+  }
+
+  async function handleCsv(e) {
     const file = e.target.files[0];
-    if (file) setCsvNome(file.name);
+    if (file) {
+      setCsvNome(file.name);
+      setLoadingSubmit(true);
+      setErro(null);
+
+      try {
+        const resultado = await importarCsv(file);
+        setMensagemSucesso("importado");
+        setSucessoNovo(true);
+        setSucessoGerenciar(false);
+        setTimeout(() => setSucessoNovo(false), 3000);
+
+        // Recarregar registros após importação
+        const dados = await fetchResiduos();
+        setRegistros(dados);
+      } catch (error) {
+        setErro(error.message || "Erro ao importar CSV");
+      } finally {
+        setLoadingSubmit(false);
+        setCsvNome(null);
+        e.target.value = null; // Reset input
+      }
+    }
   }
 
   return (
@@ -96,7 +192,12 @@ function NovoCicloSection() {
           <div className="novociclo-tabs">
             <button
               className={`novociclo-tab ${aba === "novo" ? "active" : ""}`}
-              onClick={() => { setAba("novo"); setEditandoId(null); setForm({ municipio: "", estado: "", quantidade: "", reciclagem: "", ano: "" }); }}
+              onClick={() => {
+                setAba("novo");
+                setEditandoId(null);
+                setRegistroEditado(null);
+                setForm({ municipio: "", estado: "", quantidadeGerada: "", taxaReciclagem: "", ano: "" });
+              }}
             >
               + Novo Registro
             </button>
@@ -111,12 +212,18 @@ function NovoCicloSection() {
           {aba === "novo" && (
             <div className="novociclo-card">
               <h3 className="novociclo-card-title">
-                {editandoId ? "✏️ Editando Registro" : "📋 Novo Registro"}
+                {editandoId ? "Editando Registro" : "Novo Registro"}
               </h3>
 
-              {sucesso && (
+              {sucessoNovo && (
                 <div className="novociclo-sucesso">
-                  ✅ Registro {editandoId ? "atualizado" : "salvo"} com sucesso!
+                  Registro {mensagemSucesso} com sucesso!
+                </div>
+              )}
+
+              {erro && (
+                <div className="novociclo-erro">
+                  ❌ {erro}
                 </div>
               )}
 
@@ -141,11 +248,11 @@ function NovoCicloSection() {
                 <div className="form-row">
                   <div className="form-group">
                     <label>Quantidade Gerada (ton)</label>
-                    <input type="number" name="quantidade" placeholder="Ex: 1500" value={form.quantidade} onChange={handleChange} required min="0" />
+                    <input type="number" name="quantidadeGerada" placeholder="Ex: 1500,5" value={form.quantidadeGerada} onChange={handleChange} required min="0" step="0.01" />
                   </div>
                   <div className="form-group">
                     <label>Taxa de Reciclagem (%)</label>
-                    <input type="number" name="reciclagem" placeholder="Ex: 72" value={form.reciclagem} onChange={handleChange} required min="0" max="100" />
+                    <input type="number" name="taxaReciclagem" placeholder="Ex: 72" value={form.taxaReciclagem} onChange={handleChange} required min="0" max="100" step="0.01" />
                   </div>
                   <div className="form-group form-group--small">
                     <label>Ano</label>
@@ -157,17 +264,17 @@ function NovoCicloSection() {
                   <label>Importar CSV</label>
                   <label className="csv-upload">
                     <input type="file" accept=".csv" onChange={handleCsv} />
-                    <span className="csv-icon">📂</span>
+                    <span className="csv-icon"></span>
                     <span>{csvNome ? csvNome : "Clique para selecionar um arquivo .csv"}</span>
                   </label>
                 </div>
 
                 <div className="form-actions">
-                  <button type="submit" className="btn-salvar">
-                    {editandoId ? "Salvar Alterações" : "+ Adicionar Registro"}
+                  <button type="submit" className="btn-salvar" disabled={loadingSubmit}>
+                    {loadingSubmit ? "Salvando..." : (editandoId ? "Salvar Alterações" : "+ Adicionar Registro")}
                   </button>
                   {editandoId && (
-                    <button type="button" className="btn-cancelar" onClick={() => { setEditandoId(null); setForm({ municipio: "", estado: "", quantidade: "", reciclagem: "", ano: "" }); }}>
+                    <button type="button" className="btn-cancelar" onClick={() => { setEditandoId(null); setForm({ municipio: "", estado: "", quantidadeGerada: "", taxaReciclagem: "", ano: "" }); }}>
                       Cancelar
                     </button>
                   )}
@@ -179,8 +286,23 @@ function NovoCicloSection() {
 
           {aba === "gerenciar" && (
             <div className="novociclo-card">
-              <h3 className="novociclo-card-title">📊 Registros Cadastrados</h3>
-              {registros.length === 0 ? (
+              <h3 className="novociclo-card-title">Registros Cadastrados</h3>
+
+              {erro && (
+                <div className="novociclo-erro">
+                  ❌ {erro}
+                </div>
+              )}
+
+              {sucessoGerenciar && (
+                <div className="novociclo-sucesso">
+                  Registro {mensagemSucesso} com sucesso!
+                </div>
+              )}
+
+              {loading ? (
+                <div className="novociclo-loading">Carregando registros...</div>
+              ) : registros.length === 0 ? (
                 <p className="novociclo-vazio">Nenhum registro encontrado.</p>
               ) : (
                 <table className="novociclo-table">
@@ -199,8 +321,8 @@ function NovoCicloSection() {
                       <tr key={r.id}>
                         <td>{r.municipio}</td>
                         <td>{r.estado}</td>
-                        <td>{r.quantidade.toLocaleString("pt-BR")}</td>
-                        <td>{r.reciclagem}%</td>
+                        <td>{r.quantidadeGerada.toLocaleString("pt-BR")}</td>
+                        <td>{r.taxaReciclagem}%</td>
                         <td>{r.ano}</td>
                         <td className="td-acoes">
                           <button className="btn-editar" onClick={() => handleEditar(r)}>✏️</button>
@@ -211,6 +333,63 @@ function NovoCicloSection() {
                   </tbody>
                 </table>
               )}
+            </div>
+          )}
+
+          {isEditModalOpen && (
+            <div className="modal-overlay">
+              <div className="modal-card">
+                <button type="button" className="modal-close" onClick={handleFecharModal}>
+                  ×
+                </button>
+                <h3 className="novociclo-card-title">Editar Registro</h3>
+
+                {erro && (
+                  <div className="novociclo-erro">❌ {erro}</div>
+                )}
+
+                <form className="novociclo-form" onSubmit={handleSubmit}>
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>Município</label>
+                      <input type="text" name="municipio" placeholder="Ex: São Paulo" value={form.municipio} onChange={handleChange} required />
+                    </div>
+                    <div className="form-group form-group--small">
+                      <label>Estado</label>
+                      <select name="estado" value={form.estado} onChange={handleChange} required>
+                        <option value="">UF</option>
+                        {estadosBR.map(uf => (
+                          <option key={uf} value={uf}>{uf}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>Quantidade Gerada (ton)</label>
+                      <input type="number" name="quantidadeGerada" placeholder="Ex: 1500,5" value={form.quantidadeGerada} onChange={handleChange} required min="0" step="0.01" />
+                    </div>
+                    <div className="form-group">
+                      <label>Taxa de Reciclagem (%)</label>
+                      <input type="number" name="taxaReciclagem" placeholder="Ex: 72" value={form.taxaReciclagem} onChange={handleChange} required min="0" max="100" step="0.01" />
+                    </div>
+                    <div className="form-group form-group--small">
+                      <label>Ano</label>
+                      <input type="number" name="ano" placeholder="Ex: 2026" value={form.ano} onChange={handleChange} required min="2000" max="2099" />
+                    </div>
+                  </div>
+
+                  <div className="form-actions">
+                    <button type="submit" className="btn-salvar" disabled={loadingSubmit}>
+                      {loadingSubmit ? "Salvando..." : "Salvar Alterações"}
+                    </button>
+                    <button type="button" className="btn-cancelar" onClick={handleFecharModal}>
+                      Cancelar
+                    </button>
+                  </div>
+                </form>
+              </div>
             </div>
           )}
 
