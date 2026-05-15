@@ -8,6 +8,23 @@ const estadosBR = [
   "SP","SE","TO"
 ];
 
+const SECTION_IDS = {
+  "Home": null,
+  "Ecopanel": "ecopanel",
+  "Radar Verde": "radar-verde",
+  "Novo Ciclo": "novo-ciclo",
+  "Raízes": "raizes",
+};
+
+function scrollToSection(sectionId) {
+  if (!sectionId) {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    return;
+  }
+  const el = document.getElementById(sectionId);
+  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
 function NovoCicloSection() {
   const [aba, setAba] = useState("novo");
   const [form, setForm] = useState({
@@ -25,6 +42,10 @@ function NovoCicloSection() {
   const [mensagemSucesso, setMensagemSucesso] = useState("");
   const [loadingSubmit, setLoadingSubmit] = useState(false);
 
+  const [activeLink, setActiveLink] = useState("Novo Ciclo");
+  const [hoveredLink, setHoveredLink] = useState(null);
+  const links = ["Home", "Ecopanel", "Radar Verde", "Novo Ciclo", "Raízes"];
+
   useEffect(() => {
     async function carregarRegistros() {
       setLoading(true);
@@ -38,13 +59,8 @@ function NovoCicloSection() {
         setLoading(false);
       }
     }
-
     carregarRegistros();
   }, []);
-
-  const links = ["Home", "Ecopanel", "Radar Verde", "Novo Ciclo", "Raízes"];
-  const [activeLink, setActiveLink] = useState("Novo Ciclo");
-  const [hoveredLink, setHoveredLink] = useState(null);
 
   function handleChange(e) {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -137,15 +153,12 @@ function NovoCicloSection() {
       setCsvNome(file.name);
       setLoadingSubmit(true);
       setErro(null);
-
       try {
-        const resultado = await importarCsv(file);
+        await importarCsv(file);
         setMensagemSucesso("importado");
         setSucessoNovo(true);
         setSucessoGerenciar(false);
         setTimeout(() => setSucessoNovo(false), 3000);
-
-        // Recarregar registros após importação
         const dados = await fetchResiduos();
         setRegistros(dados);
       } catch (error) {
@@ -153,13 +166,13 @@ function NovoCicloSection() {
       } finally {
         setLoadingSubmit(false);
         setCsvNome(null);
-        e.target.value = null; // Reset input
+        e.target.value = null;
       }
     }
   }
 
   return (
-    <section className="novociclo-section">
+    <section className="novociclo-section" id="novo-ciclo">
 
       <nav className="home-navbar">
         <div className="logo">OIKOS</div>
@@ -168,7 +181,10 @@ function NovoCicloSection() {
             <li
               key={link}
               className={hoveredLink === link || (!hoveredLink && activeLink === link) ? "active" : ""}
-              onClick={() => setActiveLink(link)}
+              onClick={() => {
+                setActiveLink(link);
+                scrollToSection(SECTION_IDS[link]);
+              }}
               onMouseEnter={() => setHoveredLink(link)}
               onMouseLeave={() => setHoveredLink(null)}
             >
@@ -222,9 +238,7 @@ function NovoCicloSection() {
               )}
 
               {erro && (
-                <div className="novociclo-erro">
-                  ❌ {erro}
-                </div>
+                <div className="novociclo-erro">❌ {erro}</div>
               )}
 
               <form className="novociclo-form" onSubmit={handleSubmit}>
@@ -264,7 +278,6 @@ function NovoCicloSection() {
                   <label>Importar CSV</label>
                   <label className="csv-upload">
                     <input type="file" accept=".csv" onChange={handleCsv} />
-                    <span className="csv-icon"></span>
                     <span>{csvNome ? csvNome : "Clique para selecionar um arquivo .csv"}</span>
                   </label>
                 </div>
@@ -274,7 +287,10 @@ function NovoCicloSection() {
                     {loadingSubmit ? "Salvando..." : (editandoId ? "Salvar Alterações" : "+ Adicionar Registro")}
                   </button>
                   {editandoId && (
-                    <button type="button" className="btn-cancelar" onClick={() => { setEditandoId(null); setForm({ municipio: "", estado: "", quantidadeGerada: "", taxaReciclagem: "", ano: "" }); }}>
+                    <button type="button" className="btn-cancelar" onClick={() => {
+                      setEditandoId(null);
+                      setForm({ municipio: "", estado: "", quantidadeGerada: "", taxaReciclagem: "", ano: "" });
+                    }}>
                       Cancelar
                     </button>
                   )}
@@ -288,11 +304,7 @@ function NovoCicloSection() {
             <div className="novociclo-card">
               <h3 className="novociclo-card-title">Registros Cadastrados</h3>
 
-              {erro && (
-                <div className="novociclo-erro">
-                  ❌ {erro}
-                </div>
-              )}
+              {erro && <div className="novociclo-erro">❌ {erro}</div>}
 
               {sucessoGerenciar && (
                 <div className="novociclo-sucesso">
@@ -339,14 +351,10 @@ function NovoCicloSection() {
           {isEditModalOpen && (
             <div className="modal-overlay">
               <div className="modal-card">
-                <button type="button" className="modal-close" onClick={handleFecharModal}>
-                  ×
-                </button>
+                <button type="button" className="modal-close" onClick={handleFecharModal}>×</button>
                 <h3 className="novociclo-card-title">Editar Registro</h3>
 
-                {erro && (
-                  <div className="novociclo-erro">❌ {erro}</div>
-                )}
+                {erro && <div className="novociclo-erro">❌ {erro}</div>}
 
                 <form className="novociclo-form" onSubmit={handleSubmit}>
                   <div className="form-row">

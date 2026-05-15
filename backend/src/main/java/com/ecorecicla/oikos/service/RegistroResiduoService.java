@@ -1,6 +1,8 @@
 package com.ecorecicla.oikos.service;
 
 import com.ecorecicla.oikos.exception.CsvImportException;
+import com.ecorecicla.oikos.exception.RegistroDuplicadoException;
+import com.ecorecicla.oikos.exception.RegistroNaoEncontradoException;
 import com.ecorecicla.oikos.model.RegistroResiduo;
 import com.ecorecicla.oikos.repository.RegistroResiduoRepository;
 import com.opencsv.CSVParserBuilder;
@@ -10,18 +12,17 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class RegistroResiduoService {
+
+    private static final String CHARSET_CSV  = "UTF-16LE";
+    private static final char   SEPARADOR    = ';';
 
     private final RegistroResiduoRepository repository;
 
@@ -29,32 +30,49 @@ public class RegistroResiduoService {
         return repository.findAll();
     }
 
-    public Optional<RegistroResiduo> buscarPorId(Long id) {
-        return repository.findById(id);
+
+    public RegistroResiduo buscarPorId(Long id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new RegistroNaoEncontradoException(id));
     }
 
     public RegistroResiduo salvar(RegistroResiduo registro) {
+        if (repository.existsByMunicipioIgnoreCaseAndEstadoIgnoreCaseAndAno(
+                registro.getMunicipio(), registro.getEstado(), registro.getAno())) {
+            throw new RegistroDuplicadoException(
+                    registro.getMunicipio(), registro.getEstado(), registro.getAno());
+        }
         return repository.save(registro);
     }
 
-    public Optional<RegistroResiduo> atualizar(Long id, RegistroResiduo dadosNovos) {
-        return repository.findById(id).map(existente -> {
-            existente.setMunicipio(dadosNovos.getMunicipio());
-            existente.setEstado(dadosNovos.getEstado());
-            existente.setQuantidadeGerada(dadosNovos.getQuantidadeGerada());
-            existente.setTaxaReciclagem(dadosNovos.getTaxaReciclagem());
-            existente.setAno(dadosNovos.getAno());
-            return repository.save(existente);
-        });
+
+    public RegistroResiduo atualizar(Long id, RegistroResiduo dadosNovos) {
+        RegistroResiduo existente = repository.findById(id)
+                .orElseThrow(() -> new RegistroNaoEncontradoException(id));
+
+        boolean mudouChave = !existente.getMunicipio().equalsIgnoreCase(dadosNovos.getMunicipio())
+                || !existente.getEstado().equalsIgnoreCase(dadosNovos.getEstado())
+                || !existente.getAno().equals(dadosNovos.getAno());
+
+        if (mudouChave && repository.existsByMunicipioIgnoreCaseAndEstadoIgnoreCaseAndAno(
+                dadosNovos.getMunicipio(), dadosNovos.getEstado(), dadosNovos.getAno())) {
+            throw new RegistroDuplicadoException(
+                    dadosNovos.getMunicipio(), dadosNovos.getEstado(), dadosNovos.getAno());
+        }
+
+        existente.setMunicipio(dadosNovos.getMunicipio());
+        existente.setEstado(dadosNovos.getEstado());
+        existente.setQuantidadeGerada(dadosNovos.getQuantidadeGerada());
+        existente.setTaxaReciclagem(dadosNovos.getTaxaReciclagem());
+        existente.setAno(dadosNovos.getAno());
+        return repository.save(existente);
     }
 
-    public boolean deletar(Long id) {
-        return repository.findById(id).map(registro -> {
-            repository.delete(registro);
-            return true;
-        }).orElse(false);
+    public void deletar(Long id) {
+        RegistroResiduo registro = repository.findById(id)
+                .orElseThrow(() -> new RegistroNaoEncontradoException(id));
+        repository.delete(registro);
     }
-
 
     public List<RegistroResiduo> buscarPorEstado(String estado) {
         return repository.findByEstado(estado.toUpperCase());
@@ -73,27 +91,18 @@ public class RegistroResiduoService {
     }
 
     public int importarCsv(MultipartFile arquivo) throws IOException {
-        // Valida extensão do arquivo
         String nomeArquivo = arquivo.getOriginalFilename();
         if (nomeArquivo == null || !nomeArquivo.toLowerCase().endsWith(".csv")) {
             throw new CsvImportException("O arquivo enviado não é um CSV. Envie um arquivo com extensão .csv");
         }
 
-        // Valida content-type (navegadores modernos preenchem isso)
-        String contentType = arquivo.getContentType();
-        if (contentType != null && !contentType.contains("csv") && !contentType.contains("text")) {
-            throw new CsvImportException("Tipo de arquivo inválido: '" + contentType + "'. Envie um arquivo CSV de texto.");
-        }
-
         List<RegistroResiduo> registros = new ArrayList<>();
-        int linhasLidas = 0;
-
-        byte[] bytes = arquivo.getBytes();
-        Charset charset = detectarCharset(bytes);
+        int linhasLidas       = 0;
+        int duplicatasIgnoradas = 0;
 
         try (CSVReader reader = new CSVReaderBuilder(
-                new InputStreamReader(new ByteArrayInputStream(bytes), charset))
-                .withCSVParser(new CSVParserBuilder().withSeparator(';').build())
+                new InputStreamReader(arquivo.getInputStream(), CHARSET_CSV))
+                .withCSVParser(new CSVParserBuilder().withSeparator(SEPARADOR).build())
                 .withSkipLines(1) // pula cabeçalho
                 .build()) {
 
@@ -101,101 +110,73 @@ public class RegistroResiduoService {
             while ((linha = reader.readNext()) != null) {
                 linhasLidas++;
 
-                // Ignora linha de rodapé "TOTAL da AMOSTRA"
-                if (linha.length < 4 || linha[0].trim().startsWith("TOTAL")) {
-                    continue;
-                }
+                // Ignora rodapé "TOTAL da AMOSTRA" e linhas curtas
+                if (linha.length < 14 || linha[0].trim().startsWith("TOTAL")) continue;
 
                 try {
                     String municipio = linha[1].trim();
                     String estado    = linha[2].trim();
-                    String anoStr    = linha[3].trim();
+                    int    ano       = Integer.parseInt(linha[3].trim());
 
-                    if (municipio.isBlank() || estado.isBlank() || anoStr.isBlank()) continue;
+                    if (municipio.isBlank() || estado.isBlank()) continue;
 
-                    int ano = Integer.parseInt(anoStr);
-
-                    // Quantidade total recebida na unidade (coluna UP080, índice 13)
-                    double quantidadeGerada = parsarDouble(linha, 13);
-
-                    // RDO+RPU recebidos (coluna UP007, índice 6) — resíduos domiciliares e públicos
-                    // Usamos como proxy da fração orgânica/convencional dentro do total recebido
-                    double quantidadeRDO = parsarDouble(linha, 6);
-
-                    // Taxa estimada: proporção de RDO+RPU sobre o total recebido
-                    double taxaReciclagem = 0.0;
-                    if (quantidadeGerada > 0) {
-                        taxaReciclagem = Math.min((quantidadeRDO / quantidadeGerada) * 100.0, 100.0);
+                    // Pula duplicatas silenciosamente
+                    if (repository.existsByMunicipioIgnoreCaseAndEstadoIgnoreCaseAndAno(municipio, estado, ano)) {
+                        duplicatasIgnoradas++;
+                        continue;
                     }
 
-                    RegistroResiduo registro = RegistroResiduo.builder()
+                    // Coluna UP080 [13] = quantidade total recebida
+                    // Coluna UP067 [12] = quantidade de RPO recebida
+                    double quantidadeGerada = parsarBR(linha[13]);
+                    double quantidadeRPO    = parsarBR(linha[12]);
+
+                    double taxaReciclagem = quantidadeGerada > 0
+                            ? Math.min((quantidadeRPO / quantidadeGerada) * 100.0, 100.0)
+                            : 0.0;
+
+                    registros.add(RegistroResiduo.builder()
                             .municipio(municipio)
                             .estado(estado)
                             .quantidadeGerada(quantidadeGerada)
                             .taxaReciclagem(taxaReciclagem)
                             .ano(ano)
-                            .build();
-
-                    registros.add(registro);
+                            .build());
 
                 } catch (Exception e) {
-                    // Linha com dado inválido: ignora e continua processando as demais
+                    // linha com dado inválido — ignora e continua
                 }
             }
 
         } catch (CsvImportException e) {
-            throw e; // já tratada, repassa direto
+            throw e;
         } catch (Exception e) {
-            throw new CsvImportException("Falha ao ler o arquivo CSV. Verifique se o arquivo não está corrompido.", e);
+            throw new CsvImportException("Falha ao ler o arquivo CSV: " + e.getMessage(), e);
         }
 
-        // Arquivo lido mas sem nenhuma linha de dados reconhecida
         if (linhasLidas == 0) {
             throw new CsvImportException("O arquivo CSV está vazio.");
         }
-        if (registros.isEmpty()) {
+        if (registros.isEmpty() && duplicatasIgnoradas == 0) {
             throw new CsvImportException(
-                "Nenhum registro válido encontrado. Verifique se o CSV segue o formato do SNIS (separador ';')."
-            );
+                    "Nenhum registro válido encontrado. Verifique se o CSV segue o formato do SNIS.");
         }
 
-        repository.saveAll(registros);
+        if (!registros.isEmpty()) {
+            repository.saveAll(registros);
+        }
+
         return registros.size();
     }
 
-    private Charset detectarCharset(byte[] bytes) {
-        if (bytes.length >= 2) {
-            // UTF-16 Little Endian com BOM: FF FE
-            if ((bytes[0] & 0xFF) == 0xFF && (bytes[1] & 0xFF) == 0xFE) {
-                return StandardCharsets.UTF_16LE;
-            }
-            // UTF-16 Big Endian com BOM: FE FF
-            if ((bytes[0] & 0xFF) == 0xFE && (bytes[1] & 0xFF) == 0xFF) {
-                return StandardCharsets.UTF_16BE;
-            }
-            // UTF-16 LE sem BOM: byte nulo no segundo byte (ex: 22 00 = '"' em LE)
-            // O SNIS exporta assim — sem BOM, mas em UTF-16 LE
-            if (bytes[1] == 0x00) {
-                return StandardCharsets.UTF_16LE;
-            }
-        }
-        if (bytes.length >= 3) {
-            // UTF-8 com BOM: EF BB BF
-            if ((bytes[0] & 0xFF) == 0xEF && (bytes[1] & 0xFF) == 0xBB && (bytes[2] & 0xFF) == 0xBF) {
-                return StandardCharsets.UTF_8;
-            }
-        }
-        return StandardCharsets.UTF_8; // padrão
-    }
 
-    private double parsarDouble(String[] linha, int indice) {
-        if (indice >= linha.length) return 0.0;
-        String valor = linha[indice].trim().replace(".", "").replace(",", ".");
-        if (valor.isBlank()) return 0.0;
+    private double parsarBR(String valor) {
+        if (valor == null || valor.isBlank()) return 0.0;
         try {
-            return Double.parseDouble(valor);
+            return Double.parseDouble(valor.trim().replace(".", "").replace(",", "."));
         } catch (NumberFormatException e) {
             return 0.0;
         }
+
     }
 }

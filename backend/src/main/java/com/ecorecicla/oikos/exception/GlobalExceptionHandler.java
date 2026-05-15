@@ -15,6 +15,24 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    // Registro não encontrado pelo ID → 404 Not Found
+    @ExceptionHandler(RegistroNaoEncontradoException.class)
+    public ResponseEntity<Map<String, Object>> handleNaoEncontrado(RegistroNaoEncontradoException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(erroMap(
+                HttpStatus.NOT_FOUND,
+                ex.getMessage()
+        ));
+    }
+
+    // Registro duplicado: mesmo município + estado + ano → 409 Conflict
+    @ExceptionHandler(RegistroDuplicadoException.class)
+    public ResponseEntity<Map<String, Object>> handleDuplicado(RegistroDuplicadoException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(erroMap(
+                HttpStatus.CONFLICT,
+                ex.getMessage()
+        ));
+    }
+
     // Tipo de parâmetro inválido na URL (ex: /api/residuos/abc quando espera Long)
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<Map<String, Object>> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
@@ -33,7 +51,7 @@ public class GlobalExceptionHandler {
         ));
     }
 
-    // Corpo JSON malformado no POST/PUT (ex: chave sem aspas, vírgula faltando)
+    // Corpo JSON malformado no POST/PUT
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<Map<String, Object>> handleJsonMalformado(HttpMessageNotReadableException ex) {
         return ResponseEntity.badRequest().body(erroMap(
@@ -51,7 +69,7 @@ public class GlobalExceptionHandler {
         ));
     }
 
-    // Requisição multipart malformada (ex: front-end enviou sem o campo "arquivo")
+    // Requisição multipart malformada
     @ExceptionHandler(MultipartException.class)
     public ResponseEntity<Map<String, Object>> handleMultipart(MultipartException ex) {
         return ResponseEntity.badRequest().body(erroMap(

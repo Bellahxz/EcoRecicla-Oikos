@@ -109,7 +109,24 @@
   display: flex;
   flex-direction: column;
 }
-
+.radar-media-filtros-ano {
+  display: inline-flex;
+  gap: 18px;
+  align-items: center;
+}
+.radar-media-filtros-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+.radar-media-filtros-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 22px; /* ajusta pra ficar mais pra cima */
+  align-items: flex-start; /* sobe o conteúdo */
+  margin-top: -32px; /* ajusta pra ficar mais pra cima */
+}
 .radar-chart-header {
   display: flex;
   justify-content: space-between;

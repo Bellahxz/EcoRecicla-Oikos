@@ -26,65 +26,51 @@ public class RegistroResiduoController {
 
     @GetMapping("/{id}")
     public ResponseEntity<RegistroResiduo> buscarPorId(@PathVariable Long id) {
-        return service.buscarPorId(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build()); // 404
+        return ResponseEntity.ok(service.buscarPorId(id));
     }
 
     @PostMapping
     public ResponseEntity<RegistroResiduo> criar(@RequestBody RegistroResiduo registro) {
-        RegistroResiduo salvo = service.salvar(registro);
-        return ResponseEntity.status(HttpStatus.CREATED).body(salvo); // 201
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.salvar(registro));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<RegistroResiduo> atualizar(@PathVariable Long id,
-                                                      @RequestBody RegistroResiduo registro) {
-        return service.atualizar(id, registro)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build()); // 404
+                                                     @RequestBody RegistroResiduo registro) {
+        return ResponseEntity.ok(service.atualizar(id, registro));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletar(@PathVariable Long id) {
-        if (service.deletar(id)) {
-            return ResponseEntity.noContent().build(); // 204
-        }
-        return ResponseEntity.notFound().build(); // 404
+        service.deletar(id);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/estado/{estado}")
     public ResponseEntity<List<RegistroResiduo>> porEstado(@PathVariable String estado) {
         List<RegistroResiduo> resultado = service.buscarPorEstado(estado);
-        if (resultado.isEmpty()) {
-            return ResponseEntity.notFound().build(); // 404
-        }
+        if (resultado.isEmpty()) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(resultado);
     }
 
     @GetMapping("/municipio")
     public ResponseEntity<List<RegistroResiduo>> porMunicipio(@RequestParam String nome) {
         List<RegistroResiduo> resultado = service.buscarPorMunicipio(nome);
-        if (resultado.isEmpty()) {
-            return ResponseEntity.notFound().build(); // 404
-        }
+        if (resultado.isEmpty()) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(resultado);
     }
 
     @GetMapping("/ano/{ano}")
     public ResponseEntity<List<RegistroResiduo>> porAno(@PathVariable Integer ano) {
         List<RegistroResiduo> resultado = service.buscarPorAno(ano);
-        if (resultado.isEmpty()) {
-            return ResponseEntity.notFound().build(); // 404
-        }
+        if (resultado.isEmpty()) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(resultado);
     }
 
     @GetMapping("/abaixo-da-meta")
     public ResponseEntity<List<RegistroResiduo>> abaixoDaMeta(
             @RequestParam(defaultValue = "20.0") Double meta) {
-        List<RegistroResiduo> resultado = service.buscarAbaixoDaMeta(meta);
-        return ResponseEntity.ok(resultado);
+        return ResponseEntity.ok(service.buscarAbaixoDaMeta(meta));
     }
 
     @PostMapping("/importar-csv")
