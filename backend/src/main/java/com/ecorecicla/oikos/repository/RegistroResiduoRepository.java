@@ -16,4 +16,6 @@ public interface RegistroResiduoRepository extends JpaRepository<RegistroResiduo
     List<RegistroResiduo> findByAno(Integer ano);
 
     List<RegistroResiduo> findByTaxaReciclagemLessThan(Double taxaMeta);
+
+    boolean existsByMunicipioIgnoreCaseAndEstadoIgnoreCaseAndAno(String municipio, String estado, Integer ano);
 }

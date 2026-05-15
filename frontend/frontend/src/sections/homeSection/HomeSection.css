@@ -1,7 +1,9 @@
 .home-section {
-  width: 207vh;
+  width: 100%;
+  max-width: 1800px;
   min-height: 97vh;
-  padding: 30px 60px;
+  margin: 0 auto;
+  padding: 30px 48px;
   display: flex;
   flex-direction: column;
   background: linear-gradient(135deg, #72B7AE,#3E6763);
@@ -60,7 +62,51 @@
 
 .home-text {
   max-width: 520px;
-  margin-left: 200px;
+  margin-left: 120px;
+}
+
+@media (max-width: 1240px) {
+  .home-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 32px;
+  }
+
+  .home-text {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .planet-container {
+    margin-right: 0;
+    width: 100%;
+  }
+
+  .planet-image {
+    width: 100%;
+    max-width: 700px;
+  }
+}
+
+@media (max-width: 860px) {
+  .home-text h1 {
+    font-size: 48px;
+  }
+
+  .home-text p {
+    font-size: 20px;
+  }
+
+  .primary-btn,
+  .secondary-btn {
+    width: 100%;
+  }
+
+  .nav-links {
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-right: 0;
+  }
 }
 
 .home-text h1 {
