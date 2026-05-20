@@ -1,10 +1,7 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./NovoCicloSection.css";
-<<<<<<< HEAD
-import { useNavigate, useSearchParams } from "react-router-dom";
-=======
 import { fetchResiduos, criarResiduo, atualizarResiduo, deletarResiduo, importarCsv } from "../../services/api";
->>>>>>> 70de6b8c9a422425f9fb1776883fd04808e4a0f1
 
 const estadosBR = [
   "AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS",
@@ -12,26 +9,9 @@ const estadosBR = [
   "SP","SE","TO"
 ];
 
-const SECTION_IDS = {
-  "Home": null,
-  "Ecopanel": "ecopanel",
-  "Radar Verde": "radar-verde",
-  "Novo Ciclo": "novo-ciclo",
-  "Raízes": "raizes",
-};
-
-function scrollToSection(sectionId) {
-  if (!sectionId) {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-    return;
-  }
-  const el = document.getElementById(sectionId);
-  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-}
-
 function NovoCicloSection() {
-  const [searchParams] = useSearchParams();
-  const [aba, setAba] = useState(searchParams.get("aba") || "novo");
+  const navigate = useNavigate();
+  const [aba, setAba] = useState("novo");
   const [form, setForm] = useState({
     municipio: "", estado: "", quantidadeGerada: "", taxaReciclagem: "", ano: ""
   });
@@ -46,32 +26,32 @@ function NovoCicloSection() {
   const [sucessoGerenciar, setSucessoGerenciar] = useState(false);
   const [mensagemSucesso, setMensagemSucesso] = useState("");
   const [loadingSubmit, setLoadingSubmit] = useState(false);
-
   const [activeLink, setActiveLink] = useState("Novo Ciclo");
   const [hoveredLink, setHoveredLink] = useState(null);
-<<<<<<< HEAD
-  const navigate = useNavigate();
-
-  function handleLinkClick(link) {
-    setActiveLink(link);
-    if (link === "Novo Ciclo") {
-      navigate("/novo-ciclo");
-    } else {
-      const ids = {
-        "Home": "home",
-        "Ecopanel": "ecopanel",
-        "Radar Verde": "radar-verde",
-        "Raízes": "raizes",
-      };
-      navigate("/");
-      setTimeout(() => {
-        const el = document.getElementById(ids[link]);
-        if (el) el.scrollIntoView({ behavior: "smooth" });
-      }, 100);
-    }
-  }
-=======
   const links = ["Home", "Ecopanel", "Radar Verde", "Novo Ciclo", "Raízes"];
+
+  // links que ficam na home (scroll após navegar)
+  const SECTION_IDS = {
+    "Home": null,
+    "Ecopanel": "ecopanel",
+    "Radar Verde": "radar-verde",
+    "Raízes": "raizes",
+  };
+
+  function handleNavClick(link) {
+    setActiveLink(link);
+    if (link === "Novo Ciclo") return; // já está aqui
+    if (link === "Home") {
+      navigate("/");
+      return;
+    }
+    // navega para home e faz scroll na seção
+    navigate("/");
+    setTimeout(() => {
+      const el = document.getElementById(SECTION_IDS[link]);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 150);
+  }
 
   useEffect(() => {
     async function carregarRegistros() {
@@ -88,7 +68,6 @@ function NovoCicloSection() {
     }
     carregarRegistros();
   }, []);
->>>>>>> 70de6b8c9a422425f9fb1776883fd04808e4a0f1
 
   function handleChange(e) {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -222,14 +201,7 @@ function NovoCicloSection() {
             <li
               key={link}
               className={hoveredLink === link || (!hoveredLink && activeLink === link) ? "active" : ""}
-<<<<<<< HEAD
-              onClick={() => handleLinkClick(link)}
-=======
-              onClick={() => {
-                setActiveLink(link);
-                scrollToSection(SECTION_IDS[link]);
-              }}
->>>>>>> 70de6b8c9a422425f9fb1776883fd04808e4a0f1
+              onClick={() => handleNavClick(link)}
               onMouseEnter={() => setHoveredLink(link)}
               onMouseLeave={() => setHoveredLink(null)}
             >
