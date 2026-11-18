@@ -1,11 +1,11 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { HashRouter, Routes, Route } from "react-router-dom";
 
 import HomePage from "../pages/HomePage.jsx";
 import NovoCicloSection from "../sections/novocicloSection/NovoCicloSection.jsx";
 
 function AppRoutes() {
   return (
-    <BrowserRouter>
+    <HashRouter>
 
       <Routes>
 
@@ -14,7 +14,7 @@ function AppRoutes() {
 
       </Routes>
 
-    </BrowserRouter>
+    </HashRouter>
   );
 }
 
