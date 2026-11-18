@@ -20,15 +20,15 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
       - name: Instalar dependencias
-        run: npm install
-        working-directory: frontend
+        run: npm ci --legacy-peer-deps
+        working-directory: frontend/frontend
       - name: Gerar build
         run: npm run build
-        working-directory: frontend
+        working-directory: frontend/frontend
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: frontend/dist
+          path: frontend/frontend/dist
       - id: deployment
         uses: actions/deploy-pages@v4
